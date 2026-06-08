@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student LMS Manager</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">SQLite Admin Project</p>
+      <h1>Student LMS Manager</h1>
+      <p class="lead">Flask와 SQLite로 학생 데이터 조회, 등록, 수정, 삭제 흐름을 구현한 LMS 운영 관리자 페이지입니다.</p>
+    </div>
+    <a class="back-link" href="https://portfolio-mauve-theta-54.vercel.app/" target="_blank" rel="noreferrer">Portfolio</a>
+  </header>
+
+  <main class="layout">
+    <section class="stats" aria-label="운영 현황">
+      <article><span>전체 학생</span><strong>{{ stats.total }}</strong></article>
+      <article><span>수강중</span><strong>{{ stats.active }}</strong></article>
+      <article><span>수료</span><strong>{{ stats.completed }}</strong></article>
+      <article><span>상담 필요</span><strong>{{ stats.needs_care }}</strong></article>
+    </section>
+
+    <section class="panel control-panel">
+      <form class="filters" method="get">
+        <label>
+          검색
+          <input name="search" value="{{ filters.search }}" placeholder="이름, 연락처, 메모 검색">
+        </label>
+        <label>
+          상태
+          <select name="status">
+            <option value="">전체</option>
+            {% for status in statuses %}
+            <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          과정
+          <select name="course">
+            <option value="">전체</option>
+            {% for course in courses %}
+            <option value="{{ course }}" {% if filters.course == course %}selected{% endif %}>{{ course }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit">필터 적용</button>
+        <a class="ghost" href="{{ url_for('index') }}">초기화</a>
+      </form>
+    </section>
+
+    <section class="content-grid">
+      <aside class="panel add-panel">
+        <h2>학생 등록</h2>
+        <form method="post" action="{{ url_for('create_student') }}" class="student-form">
+          <label>이름<input required name="name" placeholder="홍길동"></label>
+          <label>연락처<input required name="phone" placeholder="010-0000-0000"></label>
+          <label>이메일<input name="email" placeholder="student@example.com"></label>
+          <label>과정
+            <select name="course">
+              {% for course in courses %}<option>{{ course }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>상태
+            <select name="status">
+              {% for status in statuses %}<option>{{ status }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>진도<input type="number" min="0" max="100" name="progress" value="0"></label>
+          <label>담당자<input name="manager" value="유종안"></label>
+          <label class="span-all">운영 메모<textarea name="memo" rows="4" placeholder="상담 내용, 처리 예정 업무 등을 기록"></textarea></label>
+          <button type="submit">학생 추가</button>
+        </form>
+      </aside>
+
+      <section class="panel table-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>학생 데이터</h2>
+            <p>검색, 상태 필터, 수정, 삭제가 가능한 SQLite 기반 데이터 관리 화면입니다.</p>
+          </div>
+          <span class="count">{{ students|length }}명 표시</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>학생</th>
+                <th>과정</th>
+                <th>상태</th>
+                <th>진도</th>
+                <th>담당</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in students %}
+              <tr>
+                <td>
+                  <strong>{{ student.name }}</strong>
+                  <small>{{ student.phone }} · {{ student.email or '이메일 없음' }}</small>
+                  <em>{{ student.memo or '운영 메모 없음' }}</em>
+                </td>
+                <td>{{ student.course }}</td>
+                <td><span class="status status-{{ student.status }}">{{ student.status }}</span></td>
+                <td>
+                  <div class="progress"><span style="width: {{ student.progress }}%"></span></div>
+                  <small>{{ student.progress }}%</small>
+                </td>
+                <td>{{ student.manager or '-' }}</td>
+                <td>
+                  <button type="button" class="text-btn" data-open="edit-{{ student.id }}">수정</button>
+                  <form method="post" action="{{ url_for('delete_student', student_id=student.id) }}" class="inline-form" data-confirm="{{ student.name }} 학생 데이터를 삭제할까요?">
+                    <button type="submit" class="text-btn danger">삭제</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  {% for student in students %}
+  <dialog id="edit-{{ student.id }}" class="dialog">
+    <form method="post" action="{{ url_for('update_student', student_id=student.id) }}" class="student-form dialog-form">
+      <div class="dialog-head">
+        <h2>{{ student.name }} 정보 수정</h2>
+        <button type="button" class="icon-btn" data-close="edit-{{ student.id }}" aria-label="닫기">×</button>
+      </div>
+      <label>이름<input required name="name" value="{{ student.name }}"></label>
+      <label>연락처<input required name="phone" value="{{ student.phone }}"></label>
+      <label>이메일<input name="email" value="{{ student.email }}"></label>
+      <label>과정
+        <select name="course">
+          {% for course in courses %}<option {% if student.course == course %}selected{% endif %}>{{ course }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>상태
+        <select name="status">
+          {% for status in statuses %}<option {% if student.status == status %}selected{% endif %}>{{ status }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>진도<input type="number" min="0" max="100" name="progress" value="{{ student.progress }}"></label>
+      <label>담당자<input name="manager" value="{{ student.manager }}"></label>
+      <label class="span-all">운영 메모<textarea name="memo" rows="4">{{ student.memo }}</textarea></label>
+      <button type="submit">수정 저장</button>
+    </form>
+  </dialog>
+  {% endfor %}
+</body>
+</html>
