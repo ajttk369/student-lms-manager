@@ -1,5 +1,7 @@
 # Student LMS Manager
 
+![Student LMS Manager Preview](student-manager-card.png)
+
 Flask와 SQLite를 활용해 학생 정보를 등록, 조회, 수정, 삭제할 수 있는 관리자용 LMS 데이터 관리 페이지입니다.
 
 ## Live Demo
