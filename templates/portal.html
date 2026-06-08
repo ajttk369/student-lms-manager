@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Portal</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar portal-topbar">
+    <div>
+      <p class="eyebrow">Student View</p>
+      <h1>Student Portal</h1>
+      <p class="lead">관리자가 등록한 학생 데이터를 기반으로 학생이 자신의 수강 상태, 진도, 담당자 메모를 확인하는 데모 화면입니다.</p>
+    </div>
+    <div class="header-actions">
+      <a class="back-link" href="{{ url_for('index') }}">관리자 화면</a>
+      <a class="back-link" href="https://portfolio-mauve-theta-54.vercel.app/" target="_blank" rel="noreferrer">Portfolio</a>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel portal-selector">
+      <form method="get" class="filters portal-filter">
+        <label>
+          학생 선택
+          <select name="student_id" onchange="this.form.submit()">
+            {% for student in students %}
+            <option value="{{ student.id }}" {% if selected_student and selected_student.id == student.id %}selected{% endif %}>
+              {{ student.name }} · {{ student.course }}
+            </option>
+            {% endfor %}
+          </select>
+        </label>
+      </form>
+    </section>
+
+    {% if selected_student %}
+    <section class="portal-grid">
+      <section class="panel portal-profile">
+        <span class="status" data-status="{{ selected_student.status }}">{{ selected_student.status }}</span>
+        <h2>{{ selected_student.name }}</h2>
+        <p>{{ selected_student.course }} 과정</p>
+        <div class="portal-progress">
+          <div class="progress large"><span style="width: {{ selected_student.progress }}%"></span></div>
+          <strong>{{ selected_student.progress }}%</strong>
+        </div>
+        <dl>
+          <div><dt>연락처</dt><dd>{{ selected_student.phone }}</dd></div>
+          <div><dt>이메일</dt><dd>{{ selected_student.email or '이메일 없음' }}</dd></div>
+          <div><dt>담당자</dt><dd>{{ selected_student.manager or '-' }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="panel portal-card">
+        <h2>학습 안내</h2>
+        <ul class="todo-list">
+          {% for todo in todos %}
+          <li>{{ todo }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="panel portal-card span-two">
+        <h2>담당자 메모</h2>
+        <p class="memo-box">{{ selected_student.memo or '등록된 담당자 메모가 없습니다.' }}</p>
+      </section>
+    </section>
+    {% else %}
+    <section class="panel">
+      <p class="empty-note">학생 데이터가 없습니다. 관리자 화면에서 학생을 먼저 등록해 주세요.</p>
+    </section>
+    {% endif %}
+  </main>
+</body>
+</html>

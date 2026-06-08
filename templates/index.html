@@ -8,28 +8,80 @@
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar admin-topbar">
     <div>
-      <p class="eyebrow">SQLite Admin Project</p>
+      <p class="eyebrow">Flask SQLite Admin</p>
       <h1>Student LMS Manager</h1>
-      <p class="lead">Flask와 SQLite로 학생 데이터 조회, 등록, 수정, 삭제 흐름을 구현한 LMS 운영 관리자 페이지입니다.</p>
+      <p class="lead">실무에서 HeidiSQL로 관리하던 학생 데이터 운영 흐름을 포트폴리오에서 바로 확인할 수 있도록 SQLite 기반 CRUD 관리자 화면으로 재구성했습니다.</p>
     </div>
-    <a class="back-link" href="https://portfolio-mauve-theta-54.vercel.app/" target="_blank" rel="noreferrer">Portfolio</a>
+    <div class="header-actions">
+      <a class="back-link" href="{{ url_for('student_portal') }}">학생 포털</a>
+      <a class="back-link" href="https://portfolio-mauve-theta-54.vercel.app/" target="_blank" rel="noreferrer">Portfolio</a>
+    </div>
   </header>
 
   <main class="layout">
+    {% if notice %}
+    <div class="notice" role="status">{{ notice }}</div>
+    {% endif %}
+
     <section class="stats" aria-label="운영 현황">
-      <article><span>전체 학생</span><strong>{{ stats.total }}</strong></article>
-      <article><span>수강중</span><strong>{{ stats.active }}</strong></article>
-      <article><span>수료</span><strong>{{ stats.completed }}</strong></article>
-      <article><span>상담 필요</span><strong>{{ stats.needs_care }}</strong></article>
+      <article data-tone="total"><span>전체 학생</span><strong>{{ stats.total }}</strong></article>
+      <article data-tone="active"><span>수강중</span><strong>{{ stats.active }}</strong></article>
+      <article data-tone="completed"><span>수료</span><strong>{{ stats.completed }}</strong></article>
+      <article data-tone="care"><span>상담 필요</span><strong>{{ stats.needs_care }}</strong></article>
+      <article data-tone="progress"><span>평균 진도</span><strong>{{ stats.average_progress }}%</strong></article>
+    </section>
+
+    <section class="insight-grid" aria-label="운영 인사이트">
+      <section class="panel insight-panel">
+        <div class="panel-heading compact">
+          <div>
+            <h2>과정별 운영 요약</h2>
+            <p>과정별 인원, 평균 진도, 관리 필요 인원을 한눈에 확인합니다.</p>
+          </div>
+        </div>
+        <div class="summary-list">
+          {% for item in course_summary %}
+          <article>
+            <div>
+              <strong>{{ item.course }}</strong>
+              <span>{{ item.total }}명 · 평균 {{ item.average_progress }}%</span>
+            </div>
+            <em {% if item.risk_count > 0 %}class="warn"{% endif %}>관리 {{ item.risk_count }}명</em>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="panel insight-panel">
+        <div class="panel-heading compact">
+          <div>
+            <h2>우선 관리 대상</h2>
+            <p>상담 필요 상태이거나 진도율이 50% 미만인 학생입니다.</p>
+          </div>
+        </div>
+        <div class="priority-list">
+          {% for student in priority_students %}
+          <article>
+            <div>
+              <strong>{{ student.name }}</strong>
+              <span>{{ student.course }} · {{ student.progress }}%</span>
+            </div>
+            <em>{{ student.status }}</em>
+          </article>
+          {% else %}
+          <p class="empty-note">현재 우선 관리 대상이 없습니다.</p>
+          {% endfor %}
+        </div>
+      </section>
     </section>
 
     <section class="panel control-panel">
       <form class="filters" method="get">
         <label>
           검색
-          <input name="search" value="{{ filters.search }}" placeholder="이름, 연락처, 메모 검색">
+          <input name="search" value="{{ filters.search }}" placeholder="이름, 연락처, 이메일, 메모 검색">
         </label>
         <label>
           상태
@@ -52,6 +104,9 @@
         <button type="submit">필터 적용</button>
         <a class="ghost" href="{{ url_for('index') }}">초기화</a>
       </form>
+      <form method="post" action="{{ url_for('reset_demo') }}" class="reset-form" data-confirm="현재 데이터를 샘플 데이터 5명으로 초기화할까요?">
+        <button type="submit" class="reset-btn">데모 데이터 초기화</button>
+      </form>
     </section>
 
     <section class="content-grid">
@@ -60,7 +115,7 @@
         <form method="post" action="{{ url_for('create_student') }}" class="student-form">
           <label>이름<input required name="name" placeholder="홍길동"></label>
           <label>연락처<input required name="phone" placeholder="010-0000-0000"></label>
-          <label>이메일<input name="email" placeholder="student@example.com"></label>
+          <label>이메일<input name="email" type="email" placeholder="student@example.com"></label>
           <label>과정
             <select name="course">
               {% for course in courses %}<option>{{ course }}</option>{% endfor %}
@@ -82,9 +137,12 @@
         <div class="panel-heading">
           <div>
             <h2>학생 데이터</h2>
-            <p>검색, 상태 필터, 수정, 삭제가 가능한 SQLite 기반 데이터 관리 화면입니다.</p>
+            <p>검색, 과정/상태 필터, 수정, 삭제가 가능한 SQLite 기반 데이터 관리 화면입니다.</p>
           </div>
-          <span class="count">{{ students|length }}명 표시</span>
+          <div class="table-actions">
+            <a class="export-link" href="{{ url_for('export_students', search=filters.search, status=filters.status, course=filters.course) }}">CSV 내보내기</a>
+            <span class="count">{{ students|length }}명 표시</span>
+          </div>
         </div>
 
         <div class="table-wrap">
@@ -94,8 +152,10 @@
                 <th>학생</th>
                 <th>과정</th>
                 <th>상태</th>
+                <th>관리등급</th>
                 <th>진도</th>
                 <th>담당</th>
+                <th>최근 수정</th>
                 <th>관리</th>
               </tr>
             </thead>
@@ -108,18 +168,32 @@
                   <em>{{ student.memo or '운영 메모 없음' }}</em>
                 </td>
                 <td>{{ student.course }}</td>
-                <td><span class="status status-{{ student.status }}">{{ student.status }}</span></td>
+                <td><span class="status" data-status="{{ student.status }}">{{ student.status }}</span></td>
+                <td>
+                  {% if student.status == '상담필요' or student.progress < 50 %}
+                  <span class="risk high">우선 관리</span>
+                  {% elif student.progress >= 80 %}
+                  <span class="risk good">안정</span>
+                  {% else %}
+                  <span class="risk normal">일반</span>
+                  {% endif %}
+                </td>
                 <td>
                   <div class="progress"><span style="width: {{ student.progress }}%"></span></div>
                   <small>{{ student.progress }}%</small>
                 </td>
                 <td>{{ student.manager or '-' }}</td>
+                <td><small>{{ student.updated_at[:10] }}</small></td>
                 <td>
                   <button type="button" class="text-btn" data-open="edit-{{ student.id }}">수정</button>
                   <form method="post" action="{{ url_for('delete_student', student_id=student.id) }}" class="inline-form" data-confirm="{{ student.name }} 학생 데이터를 삭제할까요?">
                     <button type="submit" class="text-btn danger">삭제</button>
                   </form>
                 </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="8" class="empty">조건에 맞는 학생 데이터가 없습니다.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -138,7 +212,7 @@
       </div>
       <label>이름<input required name="name" value="{{ student.name }}"></label>
       <label>연락처<input required name="phone" value="{{ student.phone }}"></label>
-      <label>이메일<input name="email" value="{{ student.email }}"></label>
+      <label>이메일<input name="email" type="email" value="{{ student.email }}"></label>
       <label>과정
         <select name="course">
           {% for course in courses %}<option {% if student.course == course %}selected{% endif %}>{{ course }}</option>{% endfor %}
