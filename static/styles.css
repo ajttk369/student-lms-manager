@@ -14,11 +14,15 @@
 
 * { box-sizing: border-box; }
 
+html { overflow-x: hidden; }
+
 body {
   margin: 0;
+  min-width: 0;
   font-family: Arial, 'Noto Sans KR', sans-serif;
   color: var(--text);
   background: var(--bg);
+  overflow-wrap: anywhere;
 }
 
 .admin-topbar { border-top: 4px solid var(--primary); }
@@ -69,6 +73,7 @@ h1 { margin-bottom: 12px; font-size: clamp(30px, 4vw, 46px); letter-spacing: 0; 
 }
 
 .layout { padding: 28px min(5vw, 64px) 56px; }
+.layout > *, .content-grid > *, .insight-grid > *, .portal-grid > * { min-width: 0; }
 
 .notice {
   margin-bottom: 18px;
@@ -411,6 +416,8 @@ dt {
 
 dd {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: right;
 }
 
@@ -475,12 +482,78 @@ dd {
 @media (max-width: 640px) {
   .topbar { display: block; padding: 28px 18px 22px; }
   .header-actions { justify-content: flex-start; margin-top: 18px; }
-  .back-link { display: inline-flex; }
+  .back-link { display: inline-flex; justify-content: center; }
   .layout { padding: 18px 14px 36px; }
-  .stats, .filters, .dialog-form { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filters, .dialog-form { grid-template-columns: 1fr; }
   .panel { padding: 18px; }
   .panel-heading { display: block; }
-  .table-actions { justify-content: flex-start; margin-top: 12px; }
+  .table-actions { align-items: stretch; justify-content: flex-start; margin-top: 12px; }
+  .export-link, .count { justify-content: center; text-align: center; }
   .count { display: inline-flex; }
+  .filters > button, .filters > .ghost, .reset-btn { width: 100%; }
+  .reset-form { justify-content: stretch; }
+  .summary-list article, .priority-list article { align-items: flex-start; flex-wrap: wrap; }
+  .portal-filter { grid-template-columns: 1fr; }
+  .portal-progress { grid-template-columns: 1fr; gap: 8px; }
+  dl div { display: grid; gap: 5px; }
+  dd { text-align: left; }
   h1 { font-size: 30px; }
+}
+
+@media (max-width: 720px) {
+  .table-panel { padding: 16px; }
+  .table-wrap { overflow: visible; }
+  table, tbody { display: block; width: 100%; min-width: 0; }
+  thead { display: none; }
+  tbody { display: grid; gap: 14px; }
+  tbody tr {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+  tbody tr:hover { background: #fff; }
+  tbody td {
+    display: grid;
+    grid-template-columns: minmax(76px, 96px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    width: 100%;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody td:last-child { border-bottom: 0; }
+  tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  tbody td[data-label="학생"] {
+    grid-template-columns: 1fr;
+    padding: 16px 12px;
+    background: #f8fafc;
+  }
+  tbody td[data-label="학생"]::before { display: none; }
+  tbody td[data-label="관리"] {
+    grid-template-columns: minmax(76px, 96px) minmax(0, 1fr);
+  }
+  tbody td[data-label="관리"] .inline-form { display: inline-block; }
+  tbody td[data-label="관리"] .text-btn { min-width: 58px; }
+  .progress { width: 100%; max-width: 220px; }
+  .empty-cell {
+    display: block;
+    padding: 28px 14px;
+    text-align: center;
+  }
+  .empty-cell::before { display: none; }
+}
+
+@media (max-width: 390px) {
+  .stats { grid-template-columns: 1fr; }
+  .header-actions { display: grid; grid-template-columns: 1fr; }
+  .back-link { width: 100%; }
+  tbody td { grid-template-columns: 72px minmax(0, 1fr); }
 }

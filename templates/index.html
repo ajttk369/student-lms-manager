@@ -162,14 +162,14 @@
             <tbody>
               {% for student in students %}
               <tr>
-                <td>
+                <td data-label="학생">
                   <strong>{{ student.name }}</strong>
                   <small>{{ student.phone }} · {{ student.email or '이메일 없음' }}</small>
                   <em>{{ student.memo or '운영 메모 없음' }}</em>
                 </td>
-                <td>{{ student.course }}</td>
-                <td><span class="status" data-status="{{ student.status }}">{{ student.status }}</span></td>
-                <td>
+                <td data-label="과정">{{ student.course }}</td>
+                <td data-label="상태"><span class="status" data-status="{{ student.status }}">{{ student.status }}</span></td>
+                <td data-label="관리등급">
                   {% if student.status == '상담필요' or student.progress < 50 %}
                   <span class="risk high">우선 관리</span>
                   {% elif student.progress >= 80 %}
@@ -178,13 +178,13 @@
                   <span class="risk normal">일반</span>
                   {% endif %}
                 </td>
-                <td>
+                <td data-label="진도">
                   <div class="progress"><span style="width: {{ student.progress }}%"></span></div>
                   <small>{{ student.progress }}%</small>
                 </td>
-                <td>{{ student.manager or '-' }}</td>
-                <td><small>{{ student.updated_at[:10] }}</small></td>
-                <td>
+                <td data-label="담당">{{ student.manager or '-' }}</td>
+                <td data-label="최근 수정"><small>{{ student.updated_at[:10] }}</small></td>
+                <td data-label="관리">
                   <button type="button" class="text-btn" data-open="edit-{{ student.id }}">수정</button>
                   <form method="post" action="{{ url_for('delete_student', student_id=student.id) }}" class="inline-form" data-confirm="{{ student.name }} 학생 데이터를 삭제할까요?">
                     <button type="submit" class="text-btn danger">삭제</button>
@@ -193,7 +193,7 @@
               </tr>
               {% else %}
               <tr>
-                <td colspan="8" class="empty">조건에 맞는 학생 데이터가 없습니다.</td>
+                <td colspan="8" class="empty empty-cell">조건에 맞는 학생 데이터가 없습니다.</td>
               </tr>
               {% endfor %}
             </tbody>
